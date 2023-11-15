@@ -1,0 +1,16 @@
+{
+    "autoload": {
+        "psr-4": {
+            "Src\\": "src"
+        }
+    },
+    "require": {
+        "slim/slim": "4.*",
+        "slim/psr7": "^1.6",
+        "ext-json": "*",
+        "aws/aws-sdk-php": "^3.283",
+        "ext-curl": "*",
+        "guzzlehttp/guzzle": "^7.0",
+        "php-di/php-di": "^7.0"
+    }
+}
