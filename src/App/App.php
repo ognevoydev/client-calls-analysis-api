@@ -2,18 +2,10 @@
 
 require __DIR__ . '/../../vendor/autoload.php';
 
-use DI\ContainerBuilder;
 use Slim\Factory\AppFactory;
 
-// Создание строителя DI-контейнера
-$containerBuilder = new ContainerBuilder();
-
-// Установка зависимостей
-$dependencies = require_once __DIR__ . '/Dependencies.php';
-$dependencies($containerBuilder);
-
 // Создание DI-контейнера
-$container = $containerBuilder->build();
+$container = \Src\DI\Container::getInstance();
 
 // Создание приложения
 AppFactory::setContainer($container);

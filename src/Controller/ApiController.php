@@ -2,26 +2,19 @@
 
 namespace Src\Controller;
 
-use Src\Service\ObjectStorageService;
-use Src\Service\OpenAIService;
-use Src\Service\TranscriptionService;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use Src\MQ\MessageManager;
+use Src\MQ\Queue;
 
 class ApiController
 {
 
-    protected ObjectStorageService $objectStorageService;
-    protected TranscriptionService $transcriptionService;
-    protected OpenAIService $openAIService;
+    protected MessageManager $messageManager;
 
-    public function __construct(ObjectStorageService $objectStorageService,
-                                TranscriptionService $transcriptionService,
-                                OpenAIService $openAIService)
+    public function __construct(MessageManager $messageManager)
     {
-        $this->objectStorageService = $objectStorageService;
-        $this->transcriptionService = $transcriptionService;
-        $this->openAIService = $openAIService;
+        $this->messageManager = $messageManager;
     }
 
     public function uploadRecord(Request $request, Response $response, $args): Response
@@ -48,20 +41,14 @@ class ApiController
                 $path = '/tmp/' . $fileName;
                 $record->moveTo($path);
 
-                // Загрузка записи в облако
-                $this->objectStorageService->upload($path, 'mybucket191');
-
-                // Транскрибация записи
-                $this->transcriptionService->transcribe('https://storage.yandexcloud.net/' . 'mybucket191' . '/' . 'short_sample.mp3');
-
-                // Отправка промпта в нейросеть
-                $openAIResponse = $this->openAIService->sendRequest();
+                $this->messageManager->connect();
+                $this->messageManager->send($path, Queue::TRANSCRIBE_IN);
             }
         }
 
         $data = [
             'status' => 'success',
-            'response' => $openAIResponse
+            'response' => ''
         ];
         $response->getBody()->write(json_encode($data));
 
