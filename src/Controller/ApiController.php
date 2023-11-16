@@ -21,6 +21,8 @@ class ApiController
     {
         $token = $request->getHeader('Authorization');
 
+        // TODO - запись в БД
+
         $checkToken = true; // TODO - проверка токена
 
         if (!$checkToken) {
@@ -41,8 +43,14 @@ class ApiController
                 $path = '/tmp/' . $fileName;
                 $record->moveTo($path);
 
+                $body = [
+                    'path' => $path,
+                    'bucket' => 'mybucket191',
+                ];
+
                 $this->messageManager->connect();
-                $this->messageManager->send($path, Queue::TRANSCRIBE_IN);
+                $this->messageManager->send(json_encode($body), Queue::UPLOAD);
+                $this->messageManager->disconnect();
             }
         }
 

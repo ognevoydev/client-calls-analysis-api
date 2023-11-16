@@ -3,26 +3,25 @@
 namespace Src\DI;
 
 use DI\ContainerBuilder;
-use Src\Factory\MQFactory;
 use Src\MQ\MessageManager;
 use Src\Service\ObjectStorageService;
 use Src\Service\OpenAIService;
 use Src\Service\TranscriptionService;
-use function DI\autowire;
-use function DI\create;
-use function DI\get;
 
 class Container
 {
     protected static $instance;
 
-    private function __construct() {
+    private function __construct()
+    {
     }
 
-    private function __clone() {
+    private function __clone()
+    {
     }
 
-    public static function getInstance() {
+    public static function getInstance()
+    {
         if (self::$instance === null) {
             self::$instance = self::build();
         }

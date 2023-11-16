@@ -8,7 +8,10 @@ if (php_sapi_name() != 'cli') {
 
 require __DIR__ . '/../../vendor/autoload.php';
 
-$messageManager = \Src\DI\Container::getInstance()->get(\Src\MQ\MessageManager::class);
+$container = \Src\DI\Container::getInstance();
+
+// TODO - убрать обращение к контейнеру
+$messageManager = $container->get(\Src\MQ\MessageManager::class);
 
 try {
     $messageManager->connect();
@@ -17,5 +20,12 @@ try {
     return;
 }
 
-$worker = new MainWorker($connection, \Src\MQ\Queue::TRANSCRIBE_IN);
+$queueId = $argv[1];
+
+// TODO - убрать обращение к контейнеру
+$worker = $container->make(MainWorker::class, [
+    'AMQPConnection' => $connection,
+    'queueId' => $queueId
+]);
+
 $worker->run();

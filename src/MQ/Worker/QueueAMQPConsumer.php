@@ -5,6 +5,7 @@ namespace Src\MQ\Worker;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PhpAmqpLib\Exception\AMQPProtocolChannelException;
 use PhpAmqpLib\Message\AMQPMessage;
+use Src\Model\OperationResult;
 
 abstract class QueueAMQPConsumer
 {
@@ -12,14 +13,14 @@ abstract class QueueAMQPConsumer
 
     protected bool $debug = false;
 
-    protected string $queueName;
+    protected string $queueId;
 
     protected ?string $exchange = null;
 
-    public function __construct(AMQPStreamConnection $AMQPConnection, string $queueName, ?string $exchange = null)
+    public function __construct(AMQPStreamConnection $AMQPConnection, string $queueId, ?string $exchange = null)
     {
         $this->connection = $AMQPConnection;
-        $this->queueName = $queueName;
+        $this->queueId = $queueId;
         $this->exchange = $exchange;
     }
 
@@ -33,7 +34,7 @@ abstract class QueueAMQPConsumer
         }
 
         try {
-            $channel->queue_declare($this->queueName, false, $durable, false, false);
+            $channel->queue_declare($this->queueId, false, $durable, false, false);
         } catch (AMQPProtocolChannelException $e) {
             if ($e->getCode() == 406) {
                 $this->run($debug, !$durable);
@@ -42,11 +43,11 @@ abstract class QueueAMQPConsumer
         }
 
         if ($this->exchange !== null) {
-            $channel->queue_bind($this->queueName, $this->exchange);
+            $channel->queue_bind($this->queueId, $this->exchange);
         }
 
         $channel->basic_qos(null, 1, null);
-        $channel->basic_consume($this->queueName, '', false, false, false, false, [$this, 'callback']);
+        $channel->basic_consume($this->queueId, '', false, false, false, false, [$this, 'callback']);
 
         while (count($channel->callbacks)) {
             $channel->wait();
@@ -56,10 +57,13 @@ abstract class QueueAMQPConsumer
         $this->connection->close();
     }
 
-
     final function callback(AMQPMessage $message)
     {
-        if ($this->process($message)) {
+        $result = $this->process($message);
+
+        if ($result->isRequeue()) {
+            $message->nack(true);
+        } else {
             $message->ack();
         }
     }
@@ -69,5 +73,5 @@ abstract class QueueAMQPConsumer
      *
      * @return bool
      */
-    abstract protected function process(AMQPMessage $message);
+    abstract protected function process(AMQPMessage $message): OperationResult;
 }

@@ -34,35 +34,34 @@ class TranscriptionService
 
         $operationId = $result["id"];
 
-        $sleepTime = 5; // 1 мин 1 канал - 10 сек
-        $countQuery = 10; // Вычислить длину аудио
+        return $operationId;
+    }
 
-        for ($i = 1; $i <= $countQuery; $i++) {
+    public function getStatus($operationId)
+    {
+        $httpClient = new Client();
 
-            $responseTwo = $httpClient->get(
-                'https://operation.api.cloud.yandex.net/operations/' . $operationId,
-                [
-                    'headers' => $this->config['headers'],
-                ]
-            );
+        $response = $httpClient->get(
+            'https://operation.api.cloud.yandex.net/operations/' . $operationId,
+            [
+                'headers' => $this->config['headers'],
+            ]
+        );
 
-            $resultTwo = $responseTwo->getBody();
+        $result = $response->getBody();
 
-            $resultTwo = json_decode($resultTwo, true);
+        $result = json_decode($result, true);
 
-            if (!empty($resultTwo['done']) && !empty($resultTwo['response'])) {
-                $finalText = '';
-                foreach ($resultTwo['response']['chunks'] as $chunk) {
-                    $finalText .= "Собеседник " . $chunk["channelTag"] . ": " . $chunk['alternatives'][0]['text'] . "\n";
-                }
-                file_put_contents($_SERVER['DOCUMENT_ROOT'] . "/finalText.txt", $finalText);
-                // Запись текста в БД
-                return $resultTwo;
-            } elseif (!empty($resultTwo['error'])) {
-                return $resultTwo['error']['message'];
+        if (!empty($result['done']) && !empty($result['response'])) {
+            $finalText = '';
+            foreach ($result['response']['chunks'] as $chunk) {
+                $finalText .= "Собеседник " . $chunk["channelTag"] . ": " . $chunk['alternatives'][0]['text'] . "\n";
             }
-
-            sleep($sleepTime);
+            file_put_contents($_SERVER['DOCUMENT_ROOT'] . "/finalText.txt", $finalText);
+            // Запись текста в БД
+            return $result;
+        } elseif (!empty($result['error'])) {
+            return $result['error']['message'];
         }
 
         return ['result' => 'failure'];

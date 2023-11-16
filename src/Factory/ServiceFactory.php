@@ -16,17 +16,22 @@ class ServiceFactory
     #[Inject]
     protected OpenAIService $openAIService;
 
-    public function getObjectStorageService()
+    public function __construct()
+    {
+
+    }
+
+    public function getObjectStorageService(): ObjectStorageService
     {
         return $this->objectStorageService;
     }
 
-    public function getTranscriptionService()
+    public function getTranscriptionService(): TranscriptionService
     {
         return $this->transcriptionService;
     }
 
-    public function getOpenAIService()
+    public function getOpenAIService(): OpenAIService
     {
         return $this->openAIService;
     }
