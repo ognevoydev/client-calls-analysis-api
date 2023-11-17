@@ -13,12 +13,12 @@ class TranscriptionService
         $this->config = $config;
     }
 
-    public function transcribe(string $audioUrl)
+    public function transcribe(string $fileName, string $bucket)
     {
         $httpClient = new Client();
 
         $data = $this->config['data'];
-        $data['audio']['uri'] = $audioUrl;
+        $data['audio']['uri'] = 'https://storage.yandexcloud.net/' . $bucket . '/' . $fileName;
 
         $response = $httpClient->post(
             $this->config['url'],
@@ -37,7 +37,7 @@ class TranscriptionService
         return $operationId;
     }
 
-    public function getStatus($operationId)
+    public function getText($operationId)
     {
         $httpClient = new Client();
 
@@ -54,16 +54,16 @@ class TranscriptionService
 
         if (!empty($result['done']) && !empty($result['response'])) {
             $finalText = '';
+
             foreach ($result['response']['chunks'] as $chunk) {
                 $finalText .= "Собеседник " . $chunk["channelTag"] . ": " . $chunk['alternatives'][0]['text'] . "\n";
             }
-            file_put_contents($_SERVER['DOCUMENT_ROOT'] . "/finalText.txt", $finalText);
-            // Запись текста в БД
-            return $result;
+
+            return $finalText;
         } elseif (!empty($result['error'])) {
             return $result['error']['message'];
         }
 
-        return ['result' => 'failure'];
+        return false;
     }
 }

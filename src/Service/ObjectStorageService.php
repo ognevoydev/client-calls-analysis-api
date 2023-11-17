@@ -18,6 +18,8 @@ class ObjectStorageService
 
     public function upload(string $path, string $bucket)
     {
+        $result = [];
+
         $response = $this->storage->upload(
             $bucket,
             basename($path),
@@ -26,7 +28,12 @@ class ObjectStorageService
 
         $response = $response->toArray();
 
-        return $response;
-        // $response['ObjectURL']
+        $result['objectURL'] = $response['ObjectURL'];
+
+        $result['fileName'] = basename($path);
+
+        $result['bucket'] = $bucket;
+
+        return $result;
     }
 }

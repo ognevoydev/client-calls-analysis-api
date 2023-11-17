@@ -5,6 +5,7 @@ namespace Src\Factory;
 use DI\Attribute\Inject;
 use Src\Service\ObjectStorageService;
 use Src\Service\OpenAIService;
+use Src\Service\PromptGenerationService;
 use Src\Service\TranscriptionService;
 
 class ServiceFactory
@@ -13,6 +14,8 @@ class ServiceFactory
     protected ObjectStorageService $objectStorageService;
     #[Inject]
     protected TranscriptionService $transcriptionService;
+    #[Inject]
+    protected PromptGenerationService $promptGenerationService;
     #[Inject]
     protected OpenAIService $openAIService;
 
@@ -29,6 +32,11 @@ class ServiceFactory
     public function getTranscriptionService(): TranscriptionService
     {
         return $this->transcriptionService;
+    }
+
+    public function getPromptGenerationService(): PromptGenerationService
+    {
+        return $this->promptGenerationService;
     }
 
     public function getOpenAIService(): OpenAIService

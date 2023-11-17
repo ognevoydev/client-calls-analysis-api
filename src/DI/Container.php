@@ -6,6 +6,7 @@ use DI\ContainerBuilder;
 use Src\MQ\MessageManager;
 use Src\Service\ObjectStorageService;
 use Src\Service\OpenAIService;
+use Src\Service\PromptGenerationService;
 use Src\Service\TranscriptionService;
 
 class Container
@@ -87,6 +88,9 @@ class Container
                     ],
                 ]);
             },
+            PromptGenerationService::class => function (\DI\Container $c) {
+                return new PromptGenerationService();
+            },
             OpenAIService::class => function (\DI\Container $c) {
                 return new OpenAIService([
                     'url' => 'https://api.openai.com/v1/chat/completions',
@@ -98,12 +102,6 @@ class Container
                     ],
                     'data' => [
                         'model' => 'gpt-3.5-turbo',
-                        'messages' => [
-                            [
-                                'role' => 'user',
-                                'content' => 'Привет'
-                            ]
-                        ],
                         'temperature' => 0.7,
                     ],
                 ]);

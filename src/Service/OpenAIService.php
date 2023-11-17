@@ -13,15 +13,26 @@ class OpenAIService
         $this->config = $config;
     }
 
-    public function sendRequest()
+    public function sendRequest(array $prompts, string $role = 'user')
     {
         $httpClient = new Client();
+
+        $body = $this->config['data'];
+
+        $body['messages'] = [];
+
+        foreach ($prompts as $prompt) {
+            $body['messages'][] = [
+                'role' => $role,
+                'content' => $prompt,
+            ];
+        }
 
         $response = $httpClient->post(
             $this->config['url'],
             [
                 'headers' => $this->config['headers'],
-                'body' => json_encode($this->config['data']),
+                'body' => json_encode($body),
             ]
         );
 
@@ -29,7 +40,8 @@ class OpenAIService
 
         $result = json_decode($result, true);
 
-        return $result['choices'][0]['message']['content'];
+        return $result;
+        // return $result['choices'][0]['message']['content'];
     }
 
     public function getModels()

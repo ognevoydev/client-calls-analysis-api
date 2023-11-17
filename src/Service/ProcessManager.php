@@ -28,7 +28,6 @@ class ProcessManager
 
         $body = $result->getBody();
         $queueId = $result->getQueueId();
-        echo $queueId . ' ';
 
         $this->changeState();
 
@@ -62,10 +61,10 @@ class ProcessManager
 
     public function transcribe($body)
     {
-        // $audioUrl = body['audioUrl'];
-        $audioUrl = 'https://storage.yandexcloud.net/' . 'mybucket191' . '/' . 'short_sample.mp3';
+        $fileName = $body['fileName'];
+        $bucket = $body['bucket'];
 
-        $operationId = $this->serviceFactory->getTranscriptionService()->transcribe($audioUrl);
+        $operationId = $this->serviceFactory->getTranscriptionService()->transcribe($fileName, $bucket);
 
         $result = [
             'operationId' => $operationId,
@@ -80,18 +79,21 @@ class ProcessManager
 
         $sleepTime = 5; // 1 мин 1 канал - 10 сек
 
-        $result = $this->serviceFactory->getTranscriptionService()->getStatus($operationId);
+        $finalText = $this->serviceFactory->getTranscriptionService()->getText($operationId);
+
+        $result = [];
 
         $requeue = false;
         $sendMessage = true;
 
-        if (empty($result['done'])) {
+        if (empty($finalText)) {
             $result['operationId'] = $body['operationId'];
             $queueId = Queue::TRANSCRIBE_PROCESS;
             $requeue = true;
             $sendMessage = false;
         } else {
-            $queueId = Queue::SEND_REQUEST;
+            $queueId = Queue::GENERATE_PROMPT;
+            $result['text'] = $finalText;
         }
 
         sleep($sleepTime);
@@ -99,11 +101,24 @@ class ProcessManager
         return new OperationResult($result, $queueId, $requeue, $sendMessage);
     }
 
+    public function generatePrompts($body)
+    {
+        $text = $body['text'];
+        $prompts = $this->serviceFactory->getPromptGenerationService()->generate($text);
+
+        $result = [
+            'prompts' => $prompts,
+        ];
+
+        return new OperationResult($result, Queue::SEND_REQUEST);
+    }
+
     public function sendRequest($body)
     {
-        $result = $this->serviceFactory->getOpenAIService()->sendRequest();
+        $prompts = $body['prompts'];
+        $result = $this->serviceFactory->getOpenAIService()->sendRequest($prompts);
 
-        return new OperationResult($result, '', false, false);
+        return new OperationResult([], '', false, false);
     }
 
     public function getActionByQueueId(string $queueId)
@@ -122,6 +137,9 @@ class ProcessManager
             },
             Queue::TRANSCRIBE_PROCESS => function ($body) {
                 return $this->getTranscriptionStatus($body);
+            },
+            Queue::GENERATE_PROMPT => function ($body) {
+                return $this->generatePrompts($body);
             },
             Queue::SEND_REQUEST => function ($body) {
                 return $this->sendRequest($body);
