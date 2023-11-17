@@ -1,6 +1,7 @@
 <?php
 
 use Src\MQ\Worker\MainWorker;
+use Src\Tools\Console;
 
 if (php_sapi_name() != 'cli') {
     die();
@@ -17,6 +18,12 @@ try {
     $messageManager->connect();
     $connection = $messageManager->getConnection();
 } catch (Throwable $e) {
+    Console::write('Не удалось установить соединение', Console::COLOR_RED);
+    return;
+}
+
+if (!isset($argv[1])) {
+    Console::write('Не указан идентификатор очереди', Console::COLOR_RED);
     return;
 }
 
@@ -27,5 +34,7 @@ $worker = $container->make(MainWorker::class, [
     'AMQPConnection' => $connection,
     'queueId' => $queueId
 ]);
+
+Console::write('Работник для очереди ' . $queueId . ' создан', Console::COLOR_GREEN);
 
 $worker->run();
