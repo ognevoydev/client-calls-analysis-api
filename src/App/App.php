@@ -4,6 +4,12 @@ require __DIR__ . '/../../vendor/autoload.php';
 
 use Slim\Factory\AppFactory;
 
+$baseDir = __DIR__ . '/../../../';
+
+// Загрузка переменных окружения
+$dotenv = \Dotenv\Dotenv::createImmutable(__DIR__ . '/../../');
+$dotenv->safeLoad();
+
 // Создание DI-контейнера
 $container = \Src\DI\Container::getInstance();
 

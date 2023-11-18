@@ -13,6 +13,6 @@
         "guzzlehttp/guzzle": "^7.0",
         "php-di/php-di": "^7.0",
         "php-amqplib/php-amqplib": "^3.2",
-        "ext-amqp": "*"
+        "vlucas/phpdotenv": "^5.6"
     }
 }

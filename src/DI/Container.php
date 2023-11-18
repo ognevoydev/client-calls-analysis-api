@@ -47,10 +47,10 @@ class Container
         return [
             MessageManager::class => function (\DI\Container $c) {
                 return new MessageManager([
-                    'host' => 'rabbitmq',
-                    'port' => 5672,
-                    'user' => 'rmuser',
-                    'password' => 'rmpassword',
+                    'host' => $_ENV['MQ_HOST'],
+                    'port' => $_ENV['MQ_PORT'],
+                    'user' => $_ENV['MQ_USER'],
+                    'password' => $_ENV['MQ_PASSWORD'],
                 ]);
             },
             ObjectStorageService::class => function (\DI\Container $c) {
@@ -59,8 +59,8 @@ class Container
                     'region' => 'ru-central1',
                     'endpoint' => 'https://storage.yandexcloud.net',
                     'credentials' => [
-                        'key' => '',
-                        'secret' => '',
+                        'key' => $_ENV['OBJECT_STORAGE_API_KEY'],
+                        'secret' => $_ENV['OBJECT_STORAGE_SECRET'],
                     ],
                 ]);
             },
@@ -68,7 +68,7 @@ class Container
                 return new TranscriptionService([
                     'url' => 'https://transcribe.api.cloud.yandex.net/speech/stt/v2/longRunningRecognize',
                     'headers' => [
-                        'Authorization' => 'Api-Key ',
+                        'Authorization' => 'Api-Key ' . $_ENV['YANDEX_SPEECHKIT_API_KEY'],
                         'Content-Type' => 'application/json',
                         'Accept' => 'application/json',
                     ],
@@ -96,7 +96,7 @@ class Container
                     'url' => 'https://api.openai.com/v1/chat/completions',
                     'apiKey' => '',
                     'headers' => [
-                        'Authorization' => 'Bearer ',
+                        'Authorization' => 'Bearer ' . $_ENV['OPENAI_API_KEY'],
                         'Content-Type' => 'application/json',
                         'Accept' => 'application/json',
                     ],
