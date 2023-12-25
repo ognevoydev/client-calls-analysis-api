@@ -3,6 +3,10 @@
 namespace Src\DI;
 
 use DI\ContainerBuilder;
+use Doctrine\DBAL\DriverManager;
+use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\ORMSetup;
+use Doctrine\ORM\Tools\Setup;
 use Src\MQ\MessageManager;
 use Src\Service\ObjectStorageService;
 use Src\Service\OpenAIService;
@@ -45,6 +49,23 @@ class Container
     private static function getDependencies()
     {
         return [
+            EntityManager::class => function (\DI\Container $c) {
+
+                $config = ORMSetup::createAttributeMetadataConfiguration(
+                    paths: [__DIR__ . "/../Entity"],
+                );
+
+                $connection = DriverManager::getConnection([
+                    'driver' => 'pdo_mysql',
+                    'host' => $_ENV['DB_HOST'],
+                    'port' => $_ENV['DB_PORT'],
+                    'dbname' => $_ENV['DB_NAME'],
+                    'user' => $_ENV['DB_USER'],
+                    'password' => $_ENV['DB_PASSWORD'],
+                ], $config);
+
+                return new EntityManager($connection, $config);
+            },
             MessageManager::class => function (\DI\Container $c) {
                 return new MessageManager([
                     'host' => $_ENV['MQ_HOST'],
